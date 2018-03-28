@@ -1,7 +1,7 @@
 # Личный проект «Кексобукинг» [![Build status][travis-image]][travis-url]
 
 * Студент: [Виктория Хорошилова](https://up.htmlacademy.ru/javascript/13/user/308575).
-* Наставник: `Неизвестно`.
+* Наставник: [Анна Тюрина](https://htmlacademy.ru/profile/anntv).
 
 ---
 
