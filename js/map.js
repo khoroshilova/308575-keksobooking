@@ -57,22 +57,22 @@ var GUESTS_MIN = 1;
 var GUESTS_MAX = 9;
 var IMG_WIDTH = 45;
 var IMG_HEIGHT = 40;
+var IMG_ALT = 'Фотография жилья';
 var PIN_HEIGHT = 70;
-
-// Получить случайный элемент из массива
-var getRandomItem = function (array) {
-  var randomItem = array[Math.floor(Math.random() * array.length)];
-  return randomItem;
-};
 
 // Получить случайное число
 var getRandomNumber = function (min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 };
 
+// Получить случайный элемент из массива
+var getRandomItem = function (array) {
+  return array[getRandomNumber(0, array.length - 1)];
+};
+
 // Получить массив случайной длины
 var getRandomArrayLength = function (array) {
-  return array.slice(0, getRandomNumber(1, array.length));
+  return array.slice(0, getRandomNumber(0, array.length));
 };
 
 // Удалить дочерние элементы
@@ -83,6 +83,39 @@ var removeChildren = function (parent) {
 };
 
 // Получить массив похожих объявлений
+// var getDataArray = function (adsCount) {
+//   var adsArray = [];
+//
+//   for (var i = 0; i < adsCount; i++) {
+//     var locationX = getRandomNumber(LOCATION_X_MIN, LOCATION_X_MAX);
+//     var locationY = getRandomNumber(LOCATION_Y_MIN, LOCATION_Y_MAX);
+//
+//     adsArray[i] = {
+//       author: {
+//         avatar: 'img/avatars/user0' + (i + 1) + '.png'
+//       },
+//       offer: {
+//         title: getRandomItem(TITLES),
+//         address: locationX + ', ' + locationY,
+//         price: getRandomNumber(PRICE_MIN, PRICE_MAX),
+//         type: getRandomItem(TYPES),
+//         rooms: getRandomNumber(ROOMS_MIN, ROOMS_MAX),
+//         guests: getRandomNumber(GUESTS_MIN, GUESTS_MAX),
+//         checkin: getRandomItem(CHECKIN_TIMES),
+//         checkout: getRandomItem(CHECKOUT_TIMES),
+//         features: getRandomArrayLength(FEATURES),
+//         description: '',
+//         photos: PHOTOS
+//       },
+//       location: {
+//         x: locationX,
+//         y: locationY
+//       }
+//     };
+//   }
+//   return adsArray;
+// };
+
 var getDataArray = function (adsCount) {
   var adsArray = [];
 
@@ -90,7 +123,7 @@ var getDataArray = function (adsCount) {
     var locationX = getRandomNumber(LOCATION_X_MIN, LOCATION_X_MAX);
     var locationY = getRandomNumber(LOCATION_Y_MIN, LOCATION_Y_MAX);
 
-    adsArray[i] = {
+    adsArray.push({
       author: {
         avatar: 'img/avatars/user0' + (i + 1) + '.png'
       },
@@ -111,7 +144,7 @@ var getDataArray = function (adsCount) {
         x: locationX,
         y: locationY
       }
-    };
+    });
   }
   return adsArray;
 };
@@ -121,6 +154,7 @@ var mapPinsContainer = map.querySelector('.map__pins');
 var template = document.querySelector('template');
 var pinTemplate = template.content.querySelector('.map__pin');
 var cardTemplate = template.content.querySelector('.map__card');
+var filtersContainer = map.querySelector('.map__filters-container');
 var ads = getDataArray(CARDS_COUNT);
 
 // Создать изображения особенностей в объявлении
@@ -138,16 +172,16 @@ var createPhotoElement = function (item) {
   photoElement.width = IMG_WIDTH;
   photoElement.height = IMG_HEIGHT;
   photoElement.classList.add('popup__photo');
-  photoElement.alt = 'Фотография жилья';
+  photoElement.alt = IMG_ALT;
   return photoElement;
 };
 
 // Создать и добавить коллекцию данных в объявлении
 var createCollectionFromArray = function (array, renderFunction) {
   var fragment = document.createDocumentFragment();
-  for (var i = 0; i < array.length; i++) {
-    fragment.appendChild(renderFunction(array[i]));
-  }
+  array.forEach(function (item) {
+    fragment.appendChild(renderFunction(item));
+  });
   return fragment;
 };
 
@@ -194,8 +228,9 @@ var renderCard = function (ad) {
   return fragment;
 };
 
+// Добавить объявление на карту
 var openCard = function (ad) {
-  map.insertBefore(renderCard(ad), map.querySelector('.map__filters-container'));
+  map.insertBefore(renderCard(ad), filtersContainer);
 };
 
 // Создать элемент метки
