@@ -61,7 +61,6 @@ var PIN_MAIN_WIDTH = 62;
 var PIN_MAIN_HEIGHT = 62;
 var PIN_ARROW_HEIGHT = 22;
 var ENABLE_FORM_FIELDS = false;
-var DISABLE_FORM_FIELDS = true;
 var ESC_KEYCODE = 27;
 
 // Получить случайное число
@@ -261,7 +260,9 @@ var renderPins = function (adsArray) {
   return fragment;
 };
 
+
 // Вычисление координат главной метки
+var isPinDragged = false;
 var calculateMainPinCoords = function (pinState) {
   var coordX = mapPinMain.offsetLeft + (PIN_MAIN_WIDTH / 2);
   var coordY = mapPinMain.offsetTop + (PIN_MAIN_HEIGHT / 2);
@@ -273,25 +274,22 @@ var calculateMainPinCoords = function (pinState) {
   return coordX + ', ' + coordY;
 };
 
-// Установить значение в поле адреса
-var setAddressFieldValue = function (pinState) {
-  addressField.value = calculateMainPinCoords(pinState);
-};
-setAddressFieldValue();
+addressField.value = calculateMainPinCoords(isPinDragged);
 
 // Включить / отключить поля формы
-var changeAdFormFieldsState = function (value) {
-  for (var i = 0; i < adFormFieldsets.length; i++) {
-    adFormFieldsets[i].disabled = value;
-  }
+var changeAdFormFieldsState = function () {
+  adForm.classList.remove('ad-form--disabled');
+  adFormFieldsets.forEach(function (item) {
+    item.removeAttribute('disabled');
+  });
 };
-changeAdFormFieldsState(DISABLE_FORM_FIELDS);
 
 // Активировать карту при перемещении метки
 var onMainPinDrag = function () {
   map.classList.remove('map--faded');
   mapPinsContainer.appendChild(renderPins(ads));
-  setAddressFieldValue('dragged');
+  isPinDragged = true;
+  addressField.value = calculateMainPinCoords(isPinDragged);
   adForm.classList.remove('ad-form--disabled');
   changeAdFormFieldsState(ENABLE_FORM_FIELDS);
 };
