@@ -1,7 +1,5 @@
 'use strict';
 
-document.querySelector('.map').classList.remove('map--faded');
-
 // Переменные
 var CARDS_COUNT = 8;
 var TITLES = [
@@ -59,6 +57,11 @@ var IMG_WIDTH = 45;
 var IMG_HEIGHT = 40;
 var IMG_ALT = 'Фотография жилья';
 var PIN_HEIGHT = 70;
+var PIN_MAIN_WIDTH = 62;
+var PIN_MAIN_HEIGHT = 62;
+var PIN_ARROW_HEIGHT = 22;
+var ENABLE_FORM_FIELDS = false;
+var ESC_KEYCODE = 27;
 
 // Получить случайное число
 var getRandomNumber = function (min, max) {
@@ -83,39 +86,6 @@ var removeChildren = function (parent) {
 };
 
 // Получить массив похожих объявлений
-// var getDataArray = function (adsCount) {
-//   var adsArray = [];
-//
-//   for (var i = 0; i < adsCount; i++) {
-//     var locationX = getRandomNumber(LOCATION_X_MIN, LOCATION_X_MAX);
-//     var locationY = getRandomNumber(LOCATION_Y_MIN, LOCATION_Y_MAX);
-//
-//     adsArray[i] = {
-//       author: {
-//         avatar: 'img/avatars/user0' + (i + 1) + '.png'
-//       },
-//       offer: {
-//         title: getRandomItem(TITLES),
-//         address: locationX + ', ' + locationY,
-//         price: getRandomNumber(PRICE_MIN, PRICE_MAX),
-//         type: getRandomItem(TYPES),
-//         rooms: getRandomNumber(ROOMS_MIN, ROOMS_MAX),
-//         guests: getRandomNumber(GUESTS_MIN, GUESTS_MAX),
-//         checkin: getRandomItem(CHECKIN_TIMES),
-//         checkout: getRandomItem(CHECKOUT_TIMES),
-//         features: getRandomArrayLength(FEATURES),
-//         description: '',
-//         photos: PHOTOS
-//       },
-//       location: {
-//         x: locationX,
-//         y: locationY
-//       }
-//     };
-//   }
-//   return adsArray;
-// };
-
 var getDataArray = function (adsCount) {
   var adsArray = [];
 
@@ -151,10 +121,14 @@ var getDataArray = function (adsCount) {
 
 var map = document.querySelector('.map');
 var mapPinsContainer = map.querySelector('.map__pins');
+var mapPinMain = document.querySelector('.map__pin--main');
 var template = document.querySelector('template');
 var pinTemplate = template.content.querySelector('.map__pin');
 var cardTemplate = template.content.querySelector('.map__card');
 var filtersContainer = map.querySelector('.map__filters-container');
+var adForm = document.querySelector('.ad-form');
+var adFormFieldsets = adForm.querySelectorAll('fieldset');
+var addressField = adForm.querySelector('#address');
 var ads = getDataArray(CARDS_COUNT);
 
 // Создать изображения особенностей в объявлении
@@ -191,6 +165,9 @@ var createCardElement = function (ad) {
   var popupFeatures = cardElement.querySelector('.popup__features');
   var popupPhotos = cardElement.querySelector('.popup__photos');
   var popupType = cardElement.querySelector('.popup__type');
+  var popupClose = cardElement.querySelector('.popup__close');
+
+  popupClose.addEventListener('click', onPopupCloseClick);
 
   cardElement.querySelector('.popup__title').textContent = ad.offer.title;
   cardElement.querySelector('.popup__text--address').textContent = ad.offer.address;
@@ -231,6 +208,26 @@ var renderCard = function (ad) {
 // Добавить объявление на карту
 var openCard = function (ad) {
   map.insertBefore(renderCard(ad), filtersContainer);
+  document.addEventListener('keydown', onCardEscPress);
+};
+
+var closeCard = function () {
+  map.querySelector('.map__card').remove();
+  var currentPin = map.querySelector('.map__pin--active');
+  currentPin.classList.remove('map__pin--active');
+  document.removeEventListener('keydown', onCardEscPress);
+};
+
+// Закрытие карточки при нажатии кнопки ESC
+var onCardEscPress = function (evt) {
+  if (evt.keyCode === ESC_KEYCODE) {
+    closeCard();
+  }
+};
+
+// Закрытие карточки при клике на крестик
+var onPopupCloseClick = function () {
+  closeCard();
 };
 
 // Создать элемент метки
@@ -242,7 +239,15 @@ var createPinElement = function (ad) {
   pinElement.style.top = ad.location.y - PIN_HEIGHT / 2 + 'px';
   pinAvatar.src = ad.author.avatar;
   pinAvatar.alt = ad.offer.title;
-  openCard(ad);
+
+  pinElement.addEventListener('click', function () {
+    if (map.querySelector('.map__card')) {
+      closeCard();
+    }
+    openCard(ad);
+    pinElement.classList.add('map__pin--active');
+  });
+
   return pinElement;
 };
 
@@ -255,4 +260,38 @@ var renderPins = function (adsArray) {
   return fragment;
 };
 
-mapPinsContainer.appendChild(renderPins(ads));
+
+// Вычисление координат главной метки
+var isPinDragged = false;
+var calculateMainPinCoords = function (pinState) {
+  var coordX = mapPinMain.offsetLeft + (PIN_MAIN_WIDTH / 2);
+  var coordY = mapPinMain.offsetTop + (PIN_MAIN_HEIGHT / 2);
+
+  if (pinState === 'dragged') {
+    coordY = mapPinMain.offsetTop + PIN_MAIN_HEIGHT + PIN_ARROW_HEIGHT;
+  }
+
+  return coordX + ', ' + coordY;
+};
+
+addressField.value = calculateMainPinCoords(isPinDragged);
+
+// Включить / отключить поля формы
+var changeAdFormFieldsState = function () {
+  adForm.classList.remove('ad-form--disabled');
+  adFormFieldsets.forEach(function (item) {
+    item.removeAttribute('disabled');
+  });
+};
+
+// Активировать карту при перемещении метки
+var onMainPinDrag = function () {
+  map.classList.remove('map--faded');
+  mapPinsContainer.appendChild(renderPins(ads));
+  isPinDragged = true;
+  addressField.value = calculateMainPinCoords(isPinDragged);
+  adForm.classList.remove('ad-form--disabled');
+  changeAdFormFieldsState(ENABLE_FORM_FIELDS);
+};
+
+mapPinMain.addEventListener('mouseup', onMainPinDrag);
