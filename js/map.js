@@ -295,3 +295,60 @@ var onMainPinDrag = function () {
 };
 
 mapPinMain.addEventListener('mouseup', onMainPinDrag);
+
+// Форма объявления
+var adFormType = adForm.querySelector('#type');
+var adFormPrice = adForm.querySelector('#price');
+var adFormCheckIn = adForm.querySelector('#timein');
+var adFormCheckOut = adForm.querySelector('#timeout');
+var adFormRooms = adForm.elements.rooms;
+var adFormCapacity = adForm.elements.capacity;
+// var adFormSubmitButton = adForm.querySelector('.ad-form__submit');
+// var adFormResetButton = adForm.querySelector('.ad-form__reset');
+
+// Зависимоть цены от типа жилья
+adFormType.addEventListener('change', function () {
+  if (adFormType.value === 'bungalo') {
+    adFormPrice.setAttribute('min', 0);
+    adFormPrice.setAttribute('placeholder', 0);
+  } else if (adFormType.value === 'flat') {
+    adFormPrice.setAttribute('min', 1000);
+    adFormPrice.setAttribute('placeholder', 1000);
+  } else if (adFormType.value === 'house') {
+    adFormPrice.setAttribute('min', 5000);
+    adFormPrice.setAttribute('placeholder', 5000);
+  } else if (adFormType.value === 'palace') {
+    adFormPrice.setAttribute('min', 10000);
+    adFormPrice.setAttribute('placeholder', 10000);
+  }
+});
+
+// Синхронизация времени заезда и выезда
+var syncTimes = function (fieldset1, fieldset2) {
+  fieldset1.addEventListener('change', function () {
+    fieldset2.value = fieldset1.value;
+  });
+};
+syncTimes(adFormCheckIn, adFormCheckOut);
+syncTimes(adFormCheckOut, adFormCheckIn);
+
+// Синхронизация количества комнат и количества гостей
+var syncRoomAndCapacity = function () {
+  var validCapacity = {
+    1: ['1'],
+    2: ['2', '1'],
+    3: ['3', '2', '1'],
+    100: ['0']
+  };
+  var selectRoom = adFormRooms.options[adFormRooms.selectedIndex].value;
+  var selectCapacity = adFormCapacity.options[adFormCapacity.selectedIndex].value;
+  var isCapasityFalse = validCapacity[selectRoom].indexOf(selectCapacity) === -1;
+  if (isCapasityFalse) {
+    adFormCapacity.setCustomValidity('Гостей не должно быть больше, чем комнат! ' +
+      'Если у вас 100 комнат - ваш вариант "не для гостей"');
+  } else {
+    adFormCapacity.setCustomValidity('');
+  }
+};
+
+syncRoomAndCapacity();
