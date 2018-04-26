@@ -308,18 +308,23 @@ var adFormCapacity = adForm.elements.capacity;
 
 // Зависимоть цены от типа жилья
 adFormType.addEventListener('change', function () {
-  if (adFormType.value === 'bungalo') {
-    adFormPrice.setAttribute('min', 0);
-    adFormPrice.setAttribute('placeholder', 0);
-  } else if (adFormType.value === 'flat') {
-    adFormPrice.setAttribute('min', 1000);
-    adFormPrice.setAttribute('placeholder', 1000);
-  } else if (adFormType.value === 'house') {
-    adFormPrice.setAttribute('min', 5000);
-    adFormPrice.setAttribute('placeholder', 5000);
-  } else if (adFormType.value === 'palace') {
-    adFormPrice.setAttribute('min', 10000);
-    adFormPrice.setAttribute('placeholder', 10000);
+  switch (adFormType.value) {
+    case 'bungalo':
+      adFormPrice.setAttribute('min', 0);
+      adFormPrice.setAttribute('placeholder', 0);
+      break;
+    case 'flat':
+      adFormPrice.setAttribute('min', 1000);
+      adFormPrice.setAttribute('placeholder', 1000);
+      break;
+    case 'house':
+      adFormPrice.setAttribute('min', 5000);
+      adFormPrice.setAttribute('placeholder', 5000);
+      break;
+    case 'palace':
+      adFormPrice.setAttribute('min', 10000);
+      adFormPrice.setAttribute('placeholder', 10000);
+      break;
   }
 });
 
@@ -333,22 +338,31 @@ syncTimes(adFormCheckIn, adFormCheckOut);
 syncTimes(adFormCheckOut, adFormCheckIn);
 
 // Синхронизация количества комнат и количества гостей
+var VALID_CAPACITY = {
+  1: ['1'],
+  2: ['2', '1'],
+  3: ['3', '2', '1'],
+  100: ['0']
+};
+
+var VALID_CAPACITY_TEXT = 'Гостей не должно быть больше, чем комнат! ' +
+  'Если у вас 100 комнат - ваш вариант "не для гостей"';
+
 var syncRoomAndCapacity = function () {
-  var validCapacity = {
-    1: ['1'],
-    2: ['2', '1'],
-    3: ['3', '2', '1'],
-    100: ['0']
-  };
   var selectRoom = adFormRooms.options[adFormRooms.selectedIndex].value;
   var selectCapacity = adFormCapacity.options[adFormCapacity.selectedIndex].value;
-  var isCapasityFalse = validCapacity[selectRoom].indexOf(selectCapacity) === -1;
+  var isCapasityFalse = VALID_CAPACITY[selectRoom].indexOf(selectCapacity) === -1;
   if (isCapasityFalse) {
-    adFormCapacity.setCustomValidity('Гостей не должно быть больше, чем комнат! ' +
-      'Если у вас 100 комнат - ваш вариант "не для гостей"');
+    adFormCapacity.setCustomValidity(VALID_CAPACITY_TEXT);
   } else {
     adFormCapacity.setCustomValidity('');
   }
 };
 
+var changeRoomsAndCapacity = function () {
+  adFormRooms.addEventListener('change', syncRoomAndCapacity);
+  adFormCapacity.addEventListener('change', syncRoomAndCapacity);
+};
+
 syncRoomAndCapacity();
+changeRoomsAndCapacity();
