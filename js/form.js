@@ -1,6 +1,8 @@
 'use strict';
 
 (function () {
+  // Фомра объявления
+
   var VALID_CAPACITY = {
     1: ['1'],
     2: ['2', '1'],

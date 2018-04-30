@@ -1,6 +1,8 @@
 'use strict';
 
 (function () {
+// Создание пина
+
   var PIN_HEIGHT = 70;
 
   var map = document.querySelector('.map');

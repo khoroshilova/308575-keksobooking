@@ -1,6 +1,8 @@
 'use strict';
 
 (function () {
+  // Создание карточки объявления
+
   var IMG_WIDTH = 45;
   var IMG_HEIGHT = 40;
   var IMG_ALT = 'Фотография жилья';
