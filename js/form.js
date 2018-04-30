@@ -1,6 +1,16 @@
 'use strict';
 
 (function () {
+  var VALID_CAPACITY = {
+    1: ['1'],
+    2: ['2', '1'],
+    3: ['3', '2', '1'],
+    100: ['0']
+  };
+
+  var VALID_CAPACITY_TEXT = 'Гостей не должно быть больше, чем комнат! ' +
+    'Если у вас 100 комнат - ваш вариант "не для гостей"';
+
   var adForm = document.querySelector('.ad-form');
   var adFormType = adForm.querySelector('#type');
   var adFormPrice = adForm.querySelector('#price');
@@ -41,16 +51,6 @@
   syncTimes(adFormCheckOut, adFormCheckIn);
 
   // Синхронизация количества комнат и количества гостей
-  var VALID_CAPACITY = {
-    1: ['1'],
-    2: ['2', '1'],
-    3: ['3', '2', '1'],
-    100: ['0']
-  };
-
-  var VALID_CAPACITY_TEXT = 'Гостей не должно быть больше, чем комнат! ' +
-    'Если у вас 100 комнат - ваш вариант "не для гостей"';
-
   var syncRoomAndCapacity = function () {
     var selectRoom = adFormRooms.options[adFormRooms.selectedIndex].value;
     var selectCapacity = adFormCapacity.options[adFormCapacity.selectedIndex].value;

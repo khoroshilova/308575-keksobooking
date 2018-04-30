@@ -1,6 +1,7 @@
 'use strict';
 
 (function () {
+  var CARDS_COUNT = 8;
   var PIN_MAIN_WIDTH = 62;
   var PIN_MAIN_HEIGHT = 62;
   var PIN_ARROW_HEIGHT = 22;
@@ -47,10 +48,8 @@
     });
   };
 
-  var CARDS_COUNT = 8;
-  var ads = window.data.getDataArray(CARDS_COUNT);
-
   // Активировать карту при перемещении метки
+  var ads = window.data.getDataArray(CARDS_COUNT);
   var onMainPinDrag = function () {
     map.classList.remove('map--faded');
     mapPinsContainer.appendChild(renderPins(ads));
@@ -60,7 +59,12 @@
     changeAdFormFieldsState(ENABLE_FORM_FIELDS);
   };
 
-  mapPinMain.addEventListener('mouseup', onMainPinDrag);
+  // Изменение координат главного маркера
+  var changeMainPinCoords = function () {
+    var changeMainPinX = Math.floor(parseInt(mapPinMain.style.left, 10) + PIN_MAIN_WIDTH / 2);
+    var changeMainPinY = Math.floor(parseInt(mapPinMain.style.top, 10) + PIN_MAIN_HEIGHT);
+    addressField.value = changeMainPinX + ', ' + (changeMainPinY + PIN_ARROW_HEIGHT);
+  };
 
   // Перетаскивание главного маркера
   mapPinMain.addEventListener('mousedown', function (evt) {
@@ -101,14 +105,18 @@
 
       mapPinMain.style.left = finishCoordsX + 'px';
       mapPinMain.style.top = finishCoordsY + 'px';
+      changeMainPinCoords();
     };
 
     var onMouseUp = function (upEvt) {
       upEvt.preventDefault();
+      onMainPinDrag();
+      changeMainPinCoords();
 
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseup', onMouseUp);
     };
+
 
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
