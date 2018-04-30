@@ -1,6 +1,8 @@
 'use strict';
 
 (function () {
+  // Управление карточками и пинами
+
   var CARDS_COUNT = 8;
   var PIN_MAIN_WIDTH = 62;
   var PIN_MAIN_HEIGHT = 62;
