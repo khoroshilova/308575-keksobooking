@@ -8,11 +8,13 @@
   var map = document.querySelector('.map');
   var template = document.querySelector('template');
   var pinTemplate = template.content.querySelector('.map__pin');
+
   // Создать элемент метки
   var createPinElement = function (ad) {
     var pinElement = pinTemplate.cloneNode(true);
     var pinAvatar = pinElement.querySelector('img');
 
+    pinElement.classList.add('map__pin');
     pinElement.style.left = ad.location.x + 'px';
     pinElement.style.top = ad.location.y - PIN_HEIGHT / 2 + 'px';
     pinAvatar.src = ad.author.avatar;

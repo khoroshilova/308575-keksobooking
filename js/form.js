@@ -14,12 +14,18 @@
     'Если у вас 100 комнат - ваш вариант "не для гостей"';
 
   var adForm = document.querySelector('.ad-form');
+  var adFormAddres = adForm.querySelector('#address');
   var adFormType = adForm.querySelector('#type');
   var adFormPrice = adForm.querySelector('#price');
   var adFormCheckIn = adForm.querySelector('#timein');
   var adFormCheckOut = adForm.querySelector('#timeout');
   var adFormRooms = adForm.elements.rooms;
   var adFormCapacity = adForm.elements.capacity;
+  var onButtonReset = adForm.querySelector('.ad-form__reset');
+
+  var setAddressValue = function (pinState) {
+    adFormAddres.value = window.map.calculateMainPinCoords(pinState);
+  };
 
   // Зависимоть цены от типа жилья
   adFormType.addEventListener('change', function () {
@@ -53,7 +59,7 @@
   syncTimes(adFormCheckOut, adFormCheckIn);
 
   // Синхронизация количества комнат и количества гостей
-  var syncRoomAndCapacity = function () {
+  var onRoomAndCapacityChange = function () {
     var selectRoom = adFormRooms.options[adFormRooms.selectedIndex].value;
     var selectCapacity = adFormCapacity.options[adFormCapacity.selectedIndex].value;
     var isCapasityFalse = VALID_CAPACITY[selectRoom].indexOf(selectCapacity) === -1;
@@ -64,11 +70,37 @@
     }
   };
 
-  var changeRoomsAndCapacity = function () {
-    adFormRooms.addEventListener('change', syncRoomAndCapacity);
-    adFormCapacity.addEventListener('change', syncRoomAndCapacity);
+  var syncRoomsAndCapacity = function () {
+    adFormRooms.addEventListener('change', onRoomAndCapacityChange);
+    adFormCapacity.addEventListener('change', onRoomAndCapacityChange);
   };
 
-  syncRoomAndCapacity();
-  changeRoomsAndCapacity();
+  setAddressValue();
+  onRoomAndCapacityChange();
+  syncRoomsAndCapacity();
+
+  // Сброс формы
+  onButtonReset.addEventListener('click', function () {
+    window.map.disableFormFields();
+    adFormCheckIn.removeEventListener('change', syncTimes);
+    adFormCheckOut.removeEventListener('change', syncTimes);
+    adFormRooms.removeEventListener('change', onRoomAndCapacityChange);
+  });
+
+  var onSuccess = function () {
+    window.map.disableFormFields();
+    var successMessage = document.querySelector('.success');
+    successMessage.classList.remove('hidden');
+    var hideSuccessMsg = function () {
+      successMessage.classList.add('hidden');
+    };
+    setTimeout(hideSuccessMsg, 2000);
+  };
+
+  // Отправка формы
+  adForm.addEventListener('submit', function (evt) {
+    window.backend.save(new FormData(adForm), onSuccess, window.map.errorHandler.show);
+    evt.preventDefault();
+  });
+
 })();

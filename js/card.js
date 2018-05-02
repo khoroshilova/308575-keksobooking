@@ -121,6 +121,7 @@
 
   window.card = {
     openCard: openCard,
-    closeCard: closeCard
+    closeCard: closeCard,
+    createCardElement: createCardElement
   };
 })();
