@@ -87,9 +87,11 @@
     adFormCheckIn.removeEventListener('change', syncTimes);
     adFormCheckOut.removeEventListener('change', syncTimes);
     adFormRooms.removeEventListener('change', onRoomAndCapacityChange);
+    adFormAddres.setAttribute('placeholder', '601, 406');
   });
 
-  var onSuccess = function () {
+  // Успешная отправка
+  var successHandler = function () {
     window.map.disableFormFields();
     var successMessage = document.querySelector('.success');
     successMessage.classList.remove('hidden');
@@ -99,10 +101,30 @@
     setTimeout(hideSuccessMsg, TIMEOUT);
   };
 
+  // Ошибка
+  var SHOW_ERROR_TIMEOUT = 3500;
+  var errorHandler = function (errorMessage) {
+    var node = document.createElement('div');
+    node.style = 'z-index: 100; margin: 0 auto; text-align: center; background-color: red;';
+    node.style.position = 'absolute';
+    node.style.top = 0;
+    node.style.left = 0;
+    node.style.fontSize = '24px';
+    node.textContent = errorMessage;
+    document.body.insertAdjacentElement('afterbegin', node);
+    window.setTimeout(function () {
+      document.body.removeChild('div');
+    }, SHOW_ERROR_TIMEOUT);
+  };
+
   // Отправка формы
   adForm.addEventListener('submit', function (evt) {
-    window.backend.save(new FormData(adForm), onSuccess, window.map.errorHandler.show);
+    window.backend.upload(new FormData(adForm), successHandler, errorHandler);
     evt.preventDefault();
   });
+
+  window.form = {
+    errorHandler: errorHandler
+  };
 
 })();

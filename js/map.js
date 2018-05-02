@@ -26,25 +26,9 @@
     return fragment;
   };
 
-  // При успешном запросе
+  // При успешном запросе отрисовать пины
   var onLoad = function (ads) {
     mapPinsContainer.appendChild(renderPins(ads));
-  };
-
-  // Ошибка
-  var SHOW_ERROR_TIMEOUT = 3500;
-  var errorHandler = function (errorMessage) {
-    var node = document.createElement('div');
-    node.style = 'z-index: 100; margin: 0 auto; text-align: center; background-color: red;';
-    node.style.position = 'fixed';
-    node.style.top = 0;
-    node.style.left = 0;
-    node.style.fontSize = '24px';
-    node.textContent = errorMessage;
-    document.body.insertAdjacentElement('afterbegin', node);
-    setTimeout(function () {
-      document.body.removeChild('div');
-    }, SHOW_ERROR_TIMEOUT);
   };
 
   // Вычисление координат главной метки
@@ -69,11 +53,8 @@
   // Активировать карту при перемещении метки
   var onMainPinDrag = function () {
     map.classList.remove('map--faded');
-    // isPinDragged = true;
-    window.backend.load(onLoad, errorHandler);
-    // adFormAddres.value = calculateMainPinCoords();
+    window.backend.load(onLoad, window.form.errorHandler);
     calculateMainPinCoords();
-    adForm.classList.remove('ad-form--disabled');
     enableFormFields(ENABLE_FORM_FIELDS);
   };
 
@@ -135,7 +116,6 @@
       document.removeEventListener('mouseup', onMouseUp);
     };
 
-
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
   });
@@ -143,9 +123,9 @@
   // Отключить поля формы
   var disableFormFields = function () {
     map.classList.add('map--faded');
+    changeMainPinCoords();
     adForm.classList.add('ad-form--disabled');
     adForm.reset();
-
     mapPinMain.style.left = 570 + 'px';
     mapPinMain.style.top = 375 + 'px';
     var pins = mapPinsContainer.querySelectorAll('.map__pin:not(.map__pin--main)');
@@ -161,6 +141,5 @@
   window.map = {
     calculateMainPinCoords: calculateMainPinCoords,
     disableFormFields: disableFormFields,
-    errorHandler: errorHandler
   };
 })();
