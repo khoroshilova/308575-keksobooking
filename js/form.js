@@ -13,6 +13,8 @@
   var VALID_CAPACITY_TEXT = 'Гостей не должно быть больше, чем комнат! ' +
     'Если у вас 100 комнат - ваш вариант "не для гостей"';
 
+  var TIMEOUT = 2000;
+
   var adForm = document.querySelector('.ad-form');
   var adFormAddres = adForm.querySelector('#address');
   var adFormType = adForm.querySelector('#type');
@@ -94,7 +96,7 @@
     var hideSuccessMsg = function () {
       successMessage.classList.add('hidden');
     };
-    setTimeout(hideSuccessMsg, 2000);
+    setTimeout(hideSuccessMsg, TIMEOUT);
   };
 
   // Отправка формы

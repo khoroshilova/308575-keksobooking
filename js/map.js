@@ -18,10 +18,10 @@
   var adFormAddres = adForm.querySelector('#address');
 
   // Функция отрисовки меток объявлений
-  var renderPins = function (ad) {
+  var renderPins = function (ads) {
     var fragment = document.createDocumentFragment();
-    for (var i = 0; i < ad.length; i++) {
-      fragment.appendChild(window.pin.createPinElement(ad[i]));
+    for (var i = 0; i < ads.length; i++) {
+      fragment.appendChild(window.pin.createPinElement(ads[i]));
     }
     return fragment;
   };
@@ -32,6 +32,7 @@
   };
 
   // Ошибка
+  var SHOW_ERROR_TIMEOUT = 3500;
   var errorHandler = function (errorMessage) {
     var node = document.createElement('div');
     node.style = 'z-index: 100; margin: 0 auto; text-align: center; background-color: red;';
@@ -41,6 +42,9 @@
     node.style.fontSize = '24px';
     node.textContent = errorMessage;
     document.body.insertAdjacentElement('afterbegin', node);
+    setTimeout(function () {
+      document.body.removeChild('div');
+    }, SHOW_ERROR_TIMEOUT);
   };
 
   // Вычисление координат главной метки
