@@ -29,8 +29,8 @@
     adFormAddres.value = window.map.calculateMainPinCoords(pinState);
   };
 
-  // Зависимоть цены от типа жилья
-  adFormType.addEventListener('change', function () {
+  // Синхронизация цены и типа жилья
+  var syncTypeAndPrice = function () {
     switch (adFormType.value) {
       case 'bungalo':
         adFormPrice.setAttribute('min', 0);
@@ -49,7 +49,10 @@
         adFormPrice.setAttribute('placeholder', 10000);
         break;
     }
-  });
+  };
+
+  syncTypeAndPrice();
+  adFormType.addEventListener('change', syncTypeAndPrice);
 
   // Синхронизация времени заезда и выезда
   var syncTimes = function (fieldset1, fieldset2) {
@@ -99,22 +102,26 @@
       successMessage.classList.add('hidden');
     };
     setTimeout(hideSuccessMsg, TIMEOUT);
+    adFormAddres.setAttribute('placeholder', '601, 406');
   };
 
   // Ошибка
   var SHOW_ERROR_TIMEOUT = 3500;
-  var errorHandler = function (errorMessage) {
-    var node = document.createElement('div');
-    node.style = 'z-index: 100; margin: 0 auto; text-align: center; background-color: red;';
-    node.style.position = 'absolute';
-    node.style.top = 0;
-    node.style.left = 0;
-    node.style.fontSize = '24px';
-    node.textContent = errorMessage;
-    document.body.insertAdjacentElement('afterbegin', node);
-    window.setTimeout(function () {
-      document.body.removeChild('div');
-    }, SHOW_ERROR_TIMEOUT);
+  var errorHandler = function (onError) {
+    var errorBlock = document.createElement('div');
+    errorBlock.style = 'z-index: 100; margin: 0 auto; text-align: center; background-color: red;';
+    errorBlock.style.position = 'fixed';
+    errorBlock.style.width = '100%';
+    errorBlock.style.top = 0;
+    errorBlock.style.left = 0;
+    errorBlock.style.fontSize = '24px';
+    errorBlock.style.color = 'white';
+    errorBlock.textContent = onError;
+    document.body.insertAdjacentElement('afterbegin', errorBlock);
+    var removeErrorBlock = function () {
+      errorBlock.classList.add('hidden');
+    };
+    setTimeout(removeErrorBlock, SHOW_ERROR_TIMEOUT);
   };
 
   // Отправка формы
