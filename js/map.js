@@ -3,7 +3,6 @@
 (function () {
   // Управление карточками и пинами
 
-  var CARDS_COUNT = 8;
   var PIN_MAIN_WIDTH = 62;
   var PIN_MAIN_HEIGHT = 62;
   var PIN_ARROW_HEIGHT = 22;
@@ -16,19 +15,23 @@
   var mapPinMain = document.querySelector('.map__pin--main');
   var adForm = document.querySelector('.ad-form');
   var adFormFieldsets = adForm.querySelectorAll('fieldset');
-  var addressField = adForm.querySelector('#address');
+  var adFormAddres = adForm.querySelector('#address');
 
   // Функция отрисовки меток объявлений
-  var renderPins = function (adsArray) {
+  var renderPins = function (ads) {
     var fragment = document.createDocumentFragment();
-    for (var i = 0; i < adsArray.length; i++) {
-      fragment.appendChild(window.pin.createPinElement(adsArray[i]));
+    for (var i = 0; i < ads.length; i++) {
+      fragment.appendChild(window.pin.createPinElement(ads[i]));
     }
     return fragment;
   };
 
+  // При успешном запросе отрисовать пины
+  var onLoad = function (ads) {
+    mapPinsContainer.appendChild(renderPins(ads));
+  };
+
   // Вычисление координат главной метки
-  var isPinDragged = false;
   var calculateMainPinCoords = function (pinState) {
     var coordX = mapPinMain.offsetLeft + (PIN_MAIN_WIDTH / 2);
     var coordY = mapPinMain.offsetTop + (PIN_MAIN_HEIGHT / 2);
@@ -36,14 +39,11 @@
     if (pinState === 'dragged') {
       coordY = mapPinMain.offsetTop + PIN_MAIN_HEIGHT + PIN_ARROW_HEIGHT;
     }
-
     return coordX + ', ' + coordY;
   };
 
-  addressField.value = calculateMainPinCoords(isPinDragged);
-
-  // Включить / отключить поля формы
-  var changeAdFormFieldsState = function () {
+  // Включить поля формы
+  var enableFormFields = function () {
     adForm.classList.remove('ad-form--disabled');
     adFormFieldsets.forEach(function (item) {
       item.removeAttribute('disabled');
@@ -51,21 +51,18 @@
   };
 
   // Активировать карту при перемещении метки
-  var ads = window.data.getDataArray(CARDS_COUNT);
   var onMainPinDrag = function () {
     map.classList.remove('map--faded');
-    mapPinsContainer.appendChild(renderPins(ads));
-    isPinDragged = true;
-    addressField.value = calculateMainPinCoords(isPinDragged);
-    adForm.classList.remove('ad-form--disabled');
-    changeAdFormFieldsState(ENABLE_FORM_FIELDS);
+    window.backend.load(onLoad, window.form.errorHandler);
+    calculateMainPinCoords();
+    enableFormFields(ENABLE_FORM_FIELDS);
   };
 
   // Изменение координат главного маркера
   var changeMainPinCoords = function () {
     var changeMainPinX = Math.floor(parseInt(mapPinMain.style.left, 10) + PIN_MAIN_WIDTH / 2);
     var changeMainPinY = Math.floor(parseInt(mapPinMain.style.top, 10) + PIN_MAIN_HEIGHT);
-    addressField.value = changeMainPinX + ', ' + (changeMainPinY + PIN_ARROW_HEIGHT);
+    adFormAddres.value = changeMainPinX + ', ' + (changeMainPinY + PIN_ARROW_HEIGHT);
   };
 
   // Перетаскивание главного маркера
@@ -119,8 +116,30 @@
       document.removeEventListener('mouseup', onMouseUp);
     };
 
-
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
   });
+
+  // Отключить поля формы
+  var disableFormFields = function () {
+    map.classList.add('map--faded');
+    changeMainPinCoords();
+    adForm.classList.add('ad-form--disabled');
+    adForm.reset();
+    mapPinMain.style.left = 570 + 'px';
+    mapPinMain.style.top = 375 + 'px';
+    var pins = mapPinsContainer.querySelectorAll('.map__pin:not(.map__pin--main)');
+    for (var i = 0; i < pins.length; i++) {
+      pins[i].remove();
+    }
+    var openedCard = map.querySelector('.map__card');
+    if (openedCard) {
+      openedCard.remove();
+    }
+  };
+
+  window.map = {
+    calculateMainPinCoords: calculateMainPinCoords,
+    disableFormFields: disableFormFields,
+  };
 })();
