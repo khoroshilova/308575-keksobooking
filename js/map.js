@@ -1,72 +1,74 @@
 'use strict';
 
 (function () {
-  // Управление карточками и пинами
-
   var PIN_MAIN_WIDTH = 62;
   var PIN_MAIN_HEIGHT = 62;
   var PIN_ARROW_HEIGHT = 22;
+  var PIN_MAIN_START_X = 570;
+  var PIN_MAIN_START_Y = 375;
+  var LOCATION_X_MIN = 30;
+  var LOCATION_X_MAX = 1160;
+  var LOCATION_Y_MIN = 200;
+  var LOCATION_Y_MAX = 700;
+  var ESC_KEYCODE = 27;
   var ENABLE_FORM_FIELDS = false;
-  var PIN_MAIN_LIMIT_X = [0, 1135];
-  var PIN_MAIN_LIMIT_Y = [100, 625];
+  var DISABLE_FORM_FIELDS = true;
+  var PINS_COUNT = 5;
 
   var map = document.querySelector('.map');
   var mapPinsContainer = map.querySelector('.map__pins');
   var mapPinMain = document.querySelector('.map__pin--main');
+  var mapFilters = document.querySelector('.map__filters');
   var adForm = document.querySelector('.ad-form');
-  var adFormFieldsets = adForm.querySelectorAll('fieldset');
-  var adFormAddres = adForm.querySelector('#address');
+  var typeField = adForm.querySelector('#type');
+  var timeInField = adForm.querySelector('#timein');
+  var timeOutField = adForm.querySelector('#timeout');
+  var roomNumberField = adForm.querySelector('#room_number');
+  var pageState = 'disabled';
 
-  // Функция отрисовки меток объявлений
-  var renderPins = function (ads) {
-    var fragment = document.createDocumentFragment();
-    for (var i = 0; i < ads.length; i++) {
-      fragment.appendChild(window.pin.createPinElement(ads[i]));
+  // При успешном запросе
+  var ads = [];
+  var onLoad = function (data) {
+    data.forEach(function (item) {
+      ads.push(item);
+    });
+    var slicedAds = ads.slice(0, PINS_COUNT);
+    mapPinsContainer.appendChild(window.pin.renderPins(slicedAds));
+  };
+
+  // Переключение состояния страницы
+  var enablePageState = function () {
+    window.backend.load(onLoad, window.error.errorHandler);
+    window.form.setAddressFieldValue('dragged');
+
+    map.classList.remove('map--faded');
+    adForm.classList.remove('ad-form--disabled');
+
+    mapFilters.addEventListener('change', window.filter.onFilterChange);
+    typeField.addEventListener('change', window.form.onTypeFieldChange);
+    timeInField.addEventListener('change', window.form.onTimeInFieldChange);
+    timeOutField.addEventListener('change', window.form.onTimeOutFieldChange);
+    roomNumberField.addEventListener('change', window.form.onRoomNumberFieldChange);
+    window.form.changeAdFormFieldsState(ENABLE_FORM_FIELDS);
+    pageState = 'enabled';
+  };
+
+  // Закрыть карточку при нажатии на кнопку ESC
+  var onCardEscPress = function (evt) {
+    if (evt.keyCode === ESC_KEYCODE) {
+      window.map.closeCard();
     }
+  };
+
+  // Орисовать объявления
+  var renderCard = function (ad) {
+    var fragment = document.createDocumentFragment();
+    fragment.appendChild(window.card.createCardElement(ad));
     return fragment;
   };
 
-  // При успешном запросе отрисовать пины
-  var onLoad = function (ads) {
-    mapPinsContainer.appendChild(renderPins(ads));
-  };
-
-  // Вычисление координат главной метки
-  var calculateMainPinCoords = function (pinState) {
-    var coordX = mapPinMain.offsetLeft + (PIN_MAIN_WIDTH / 2);
-    var coordY = mapPinMain.offsetTop + (PIN_MAIN_HEIGHT / 2);
-
-    if (pinState === 'dragged') {
-      coordY = mapPinMain.offsetTop + PIN_MAIN_HEIGHT + PIN_ARROW_HEIGHT;
-    }
-    return coordX + ', ' + coordY;
-  };
-
-  // Включить поля формы
-  var enableFormFields = function () {
-    adForm.classList.remove('ad-form--disabled');
-    adFormFieldsets.forEach(function (item) {
-      item.removeAttribute('disabled');
-    });
-  };
-
-  // Активировать карту при перемещении метки
-  var onMainPinDrag = function () {
-    map.classList.remove('map--faded');
-    window.backend.load(onLoad, window.form.errorHandler);
-    calculateMainPinCoords();
-    enableFormFields(ENABLE_FORM_FIELDS);
-  };
-
-  // Изменение координат главного маркера
-  var changeMainPinCoords = function () {
-    var changeMainPinX = Math.floor(parseInt(mapPinMain.style.left, 10) + PIN_MAIN_WIDTH / 2);
-    var changeMainPinY = Math.floor(parseInt(mapPinMain.style.top, 10) + PIN_MAIN_HEIGHT);
-    adFormAddres.value = changeMainPinX + ', ' + (changeMainPinY + PIN_ARROW_HEIGHT);
-  };
-
-  // Перетаскивание главного маркера
-  mapPinMain.addEventListener('mousedown', function (evt) {
+  // Активировать карту при перемещении главного маркера
+  var onMainPinDrag = function (evt) {
     evt.preventDefault();
 
     var startCoords = {
@@ -76,6 +78,9 @@
 
     var onMouseMove = function (moveEvt) {
       moveEvt.preventDefault();
+
+      map.classList.remove('map--faded');
+      adForm.classList.remove('ad-form--disabled');
 
       var shift = {
         x: startCoords.x - moveEvt.clientX,
@@ -90,56 +95,67 @@
       var finishCoordsX = (mapPinMain.offsetLeft - shift.x);
       var finishCoordsY = (mapPinMain.offsetTop - shift.y);
 
-      if (finishCoordsX < PIN_MAIN_LIMIT_X[0]) {
-        finishCoordsX = PIN_MAIN_LIMIT_X[0];
-      } else if (finishCoordsX > PIN_MAIN_LIMIT_X[1]) {
-        finishCoordsX = PIN_MAIN_LIMIT_X[1];
+      var isAvialibleX = finishCoordsX + (PIN_MAIN_WIDTH / 2) > LOCATION_X_MIN && finishCoordsX + (PIN_MAIN_WIDTH / 2) < LOCATION_X_MAX;
+      var isAvialibleY = finishCoordsY + PIN_MAIN_HEIGHT + PIN_ARROW_HEIGHT > LOCATION_Y_MIN && finishCoordsY + PIN_MAIN_HEIGHT + PIN_ARROW_HEIGHT < LOCATION_Y_MAX;
+
+      if (isAvialibleX) {
+        mapPinMain.style.left = finishCoordsX + 'px';
       }
 
-      if (finishCoordsY < PIN_MAIN_LIMIT_Y[0]) {
-        finishCoordsY = PIN_MAIN_LIMIT_Y[0];
-      } else if (finishCoordsY > PIN_MAIN_LIMIT_Y[1]) {
-        finishCoordsY = PIN_MAIN_LIMIT_Y[1];
+      if (isAvialibleY) {
+        mapPinMain.style.top = finishCoordsY + 'px';
       }
-
-      mapPinMain.style.left = finishCoordsX + 'px';
-      mapPinMain.style.top = finishCoordsY + 'px';
-      changeMainPinCoords();
+      window.form.setAddressFieldValue('dragged');
     };
 
     var onMouseUp = function (upEvt) {
       upEvt.preventDefault();
-      onMainPinDrag();
-      changeMainPinCoords();
 
+      if (pageState === 'disabled') {
+        enablePageState();
+      }
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseup', onMouseUp);
     };
 
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
-  });
-
-  // Отключить поля формы
-  var disableFormFields = function () {
-    map.classList.add('map--faded');
-    changeMainPinCoords();
-    adForm.classList.add('ad-form--disabled');
-    adForm.reset();
-    mapPinMain.style.left = 570 + 'px';
-    mapPinMain.style.top = 375 + 'px';
-    var pins = mapPinsContainer.querySelectorAll('.map__pin:not(.map__pin--main)');
-    for (var i = 0; i < pins.length; i++) {
-      pins[i].remove();
-    }
-    var openedCard = map.querySelector('.map__card');
-    if (openedCard) {
-      openedCard.remove();
-    }
   };
 
+  mapPinMain.addEventListener('mousedown', onMainPinDrag);
+
   window.map = {
-    calculateMainPinCoords: calculateMainPinCoords,
-    disableFormFields: disableFormFields,
+    ads: ads,
+    disableFormFields: function () {
+      map.classList.add('map--faded');
+      adForm.classList.add('ad-form--disabled');
+      adForm.reset();
+
+      mapPinMain.style.left = PIN_MAIN_START_X + 'px';
+      mapPinMain.style.top = PIN_MAIN_START_Y + 'px';
+      window.pin.removePins();
+      var openedCard = map.querySelector('.map__card');
+      if (openedCard) {
+        openedCard.remove();
+      }
+      window.form.changeAdFormFieldsState(DISABLE_FORM_FIELDS);
+      window.form.setAddressFieldValue();
+      mapFilters.removeEventListener('change', window.filter.onFilterChange);
+      typeField.removeEventListener('change', window.form.onTypeFieldChange);
+      timeInField.removeEventListener('change', window.form.onTimeInFieldChange);
+      timeOutField.removeEventListener('change', window.form.onTimeOutFieldChange);
+      roomNumberField.removeEventListener('change', window.form.onRoomNumberFieldChange);
+      pageState = 'disabled';
+    },
+    openCard: function (ad) {
+      map.insertBefore(renderCard(ad), map.querySelector('.map__filters-container'));
+      document.addEventListener('keydown', onCardEscPress);
+    },
+    closeCard: function () {
+      map.querySelector('.map__card').remove();
+      var currentPin = map.querySelector('.map__pin--active');
+      currentPin.classList.remove('map__pin--active');
+      document.removeEventListener('keydown', onCardEscPress);
+    }
   };
 })();
