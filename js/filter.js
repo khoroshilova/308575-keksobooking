@@ -22,11 +22,11 @@
     }
     window.pin.removePins();
 
-    var filteredPins = window.ads.filter(function (it) {
+    var filteredPins = window.map.ads.filter(function (it) {
       return getType(it) && getPrice(it) && getRooms(it) && getCapacity(it) && getFeatures(it);
     }).slice(0, PINS_COUNT);
 
-    mapPinsContainer.append(window.pin.renderPins(filteredPins));
+    mapPinsContainer.appendChild(window.pin.renderPins(filteredPins));
   };
 
   var getType = function (ad) {
@@ -53,6 +53,7 @@
     if (housingRooms.value === 'any') {
       return true;
     }
+
     return parseInt(housingRooms.value, 10) === ad.offer.rooms;
   };
 
@@ -60,7 +61,7 @@
     if (housingGuests.value === 'any') {
       return true;
     }
-    return parseInt(housingGuests.value, 10) === ad.offer.guests;
+    return parseInt(housingGuests.value, 10) <= ad.offer.guests;
   };
 
   var getFeatures = function (ad) {

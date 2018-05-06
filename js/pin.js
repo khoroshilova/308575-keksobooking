@@ -15,7 +15,7 @@
   var mapPinMain = document.querySelector('.map__pin--main');
 
   window.pin = {
-    // Создаем элемента метки
+    // Создать элемент метки
     makePinElement: function (ad) {
       var pinElement = pinTemplate.cloneNode(true);
       var pinAvatar = pinElement.querySelector('img');
@@ -47,6 +47,7 @@
 
       return cordX + ', ' + cordY;
     },
+
     // Функция отрисовки меток объявлений
     renderPins: function (adsArray) {
       var fragment = document.createDocumentFragment();
@@ -57,6 +58,7 @@
 
       return fragment;
     },
+
     // Функция удаления отрисованных меток
     removePins: function () {
       var pins = mapPinsContainer.querySelectorAll('.map__pin:not(.map__pin--main)');

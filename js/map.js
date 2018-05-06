@@ -6,8 +6,8 @@
   var PIN_ARROW_HEIGHT = 22;
   var PIN_MAIN_START_X = 570;
   var PIN_MAIN_START_Y = 375;
-  var LOCATION_X_MIN = 0;
-  var LOCATION_X_MAX = 1135;
+  var LOCATION_X_MIN = 30;
+  var LOCATION_X_MAX = 1160;
   var LOCATION_Y_MIN = 200;
   var LOCATION_Y_MAX = 700;
   var ESC_KEYCODE = 27;
@@ -27,9 +27,13 @@
   var pageState = 'disabled';
 
   // При успешном запросе
+  var ads = [];
   var onLoad = function (data) {
-    window.ads = data;
-    var slicedAds = window.ads.slice(0, PINS_COUNT);
+    // window.ads = data;
+    data.forEach(function (item) {
+      ads.push(item);
+    });
+    var slicedAds = ads.slice(0, PINS_COUNT);
     mapPinsContainer.appendChild(window.pin.renderPins(slicedAds));
   };
 
@@ -122,6 +126,7 @@
   mapPinMain.addEventListener('mousedown', onMainPinDrag);
 
   window.map = {
+    ads: ads,
     disableFormFields: function () {
       map.classList.add('map--faded');
       adForm.classList.add('ad-form--disabled');
