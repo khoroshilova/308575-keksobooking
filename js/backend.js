@@ -3,58 +3,66 @@
 (function () {
   var GET_URL = 'https://js.dump.academy/keksobooking/data';
   var POST_URL = 'https://js.dump.academy/keksobooking';
-  var SERVER_TIMEOUT = 10000;
-  var STATUS_OK = 200;
-
-  var load = function (onLoad, onError) {
-    var xhr = new XMLHttpRequest();
-    xhr.responseType = 'json';
-
-    xhr.addEventListener('load', function () {
-      if (xhr.status === STATUS_OK) {
-        onLoad(xhr.response);
-      } else {
-        onError('Статус ответа: ' + xhr.status + ' ' + xhr.statusText);
-      }
-    });
-    xhr.addEventListener('error', function () {
-      onError('Произошла ошибка соединения');
-    });
-    xhr.addEventListener('timeout', function () {
-      onError('Запрос не успел выполниться за ' + xhr.timeout + 'мс');
-    });
-
-    xhr.timeout = SERVER_TIMEOUT;
-    xhr.open('GET', GET_URL);
-    xhr.send();
+  var TIMEOUT = 10000;
+  var StatusCode = {
+    SUCCESS: 200,
+    BAD_REQUEST: 400,
+    ACCESS_DENIED: 403,
+    NOT_FOUND: 404,
+    SERVER_ERROR: 500,
+    APPLICATION_ERROR: 503,
   };
 
-  var upload = function (data, onLoad, onError) {
+  var makeXHR = function (onLoad, onError) {
     var xhr = new XMLHttpRequest();
     xhr.responseType = 'json';
+    xhr.timeout = TIMEOUT;
 
     xhr.addEventListener('load', function () {
-      if (xhr.status === STATUS_OK) {
-        onLoad(xhr.response);
-      } else {
-        onError('Статус ответа: ' + xhr.status + ' ' + xhr.statusText);
+      switch (xhr.status) {
+        case StatusCode.SUCCESS:
+          onLoad(xhr.response);
+          break;
+        case StatusCode.BAD_REQUEST:
+          onError('Статус ответа: ' + xhr.status, 'В запросе ошибка.');
+          break;
+        case StatusCode.ACCESS_DENIED:
+          onError('Статус ответа: ' + xhr.status, 'Доступ запрещён. У вас недостаточно прав.');
+          break;
+        case StatusCode.NOT_FOUND:
+          onError('Статус ответа: ' + xhr.status, 'Данные по запросу не найдены.');
+          break;
+        case StatusCode.SERVER_ERROR:
+          onError('Статус ответа: ' + xhr.status, 'Внутренняя ошибка сервера');
+          break;
+        case StatusCode.APPLICATION_ERROR:
+          onError('Статус ответа: ' + xhr.status, 'Сервис временно недоступен');
+          break;
+        default:
+          onError('Статус ответа: ' + xhr.status + ' ' + xhr.statusText);
       }
     });
+
     xhr.addEventListener('error', function () {
-      onError('Произошла ошибка соединения');
+      onError('Ошибка', 'Произошла ошибка соединения');
     });
     xhr.addEventListener('timeout', function () {
-      onError('Запрос не успел выполниться за ' + xhr.timeout + 'мс');
+      onError('Ошибка', 'Запрос не успел выполниться за ' + xhr.timeout + 'мс');
     });
 
-    xhr.timeout = SERVER_TIMEOUT;
-    xhr.open('POST', POST_URL);
-    xhr.send(data);
+    return xhr;
   };
 
   window.backend = {
-    load: load,
-    upload: upload
+    load: function (onLoad, onError) {
+      var xhr = makeXHR(onLoad, onError);
+      xhr.open('GET', GET_URL);
+      xhr.send();
+    },
+    save: function (data, onLoad, onError) {
+      var xhr = makeXHR(onLoad, onError);
+      xhr.open('POST', POST_URL);
+      xhr.send(data);
+    }
   };
-
 })();
