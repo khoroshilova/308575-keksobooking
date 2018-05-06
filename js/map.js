@@ -29,7 +29,6 @@
   // При успешном запросе
   var ads = [];
   var onLoad = function (data) {
-    // window.ads = data;
     data.forEach(function (item) {
       ads.push(item);
     });

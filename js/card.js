@@ -36,7 +36,7 @@
     return fragment;
   };
 
-    // Удалить дочерние элементы
+  // Удалить дочерние элементы
   var removeChildren = function (parent) {
     while (parent.firstChild) {
       parent.removeChild(parent.firstChild);
@@ -44,7 +44,7 @@
   };
 
 
-    // Создать элемент объявления
+  // Создать элемент объявления
   var createCardElement = function (ad) {
     var cardElement = cardTemplate.cloneNode(true);
     var popupFeatures = cardElement.querySelector('.popup__features');
