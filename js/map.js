@@ -8,15 +8,13 @@
   var PIN_MAIN_START_Y = 375;
   var LOCATION_X_MIN = 30;
   var LOCATION_X_MAX = 1160;
-  var LOCATION_Y_MIN = 200;
-  var LOCATION_Y_MAX = 700;
+  var LOCATION_Y_MIN = 150;
+  var LOCATION_Y_MAX = 500;
   var ESC_KEYCODE = 27;
   var ENABLE_FORM_FIELDS = false;
   var DISABLE_FORM_FIELDS = true;
-  var PINS_COUNT = 5;
 
   var map = document.querySelector('.map');
-  var mapPinsContainer = map.querySelector('.map__pins');
   var mapPinMain = document.querySelector('.map__pin--main');
   var mapFilters = document.querySelector('.map__filters');
   var adForm = document.querySelector('.ad-form');
@@ -26,19 +24,15 @@
   var roomNumberField = adForm.querySelector('#room_number');
   var pageState = 'disabled';
 
-  // При успешном запросе
   var ads = [];
   var onLoad = function (data) {
-    data.forEach(function (item) {
-      ads.push(item);
-    });
-    var slicedAds = ads.slice(0, PINS_COUNT);
-    mapPinsContainer.appendChild(window.pin.renderPins(slicedAds));
+    window.map.ads = data;
+    window.filter.updatePins();
   };
 
   // Переключение состояния страницы
   var enablePageState = function () {
-    window.backend.load(onLoad, window.error.errorHandler);
+    window.backend.load(onLoad, window.error.createErrorMessage);
     window.form.setAddressFieldValue('dragged');
 
     map.classList.remove('map--faded');
@@ -63,7 +57,7 @@
   // Орисовать объявления
   var renderCard = function (ad) {
     var fragment = document.createDocumentFragment();
-    fragment.appendChild(window.card.createCardElement(ad));
+    fragment.appendChild(window.card.createCardItem(ad));
     return fragment;
   };
 
@@ -71,7 +65,7 @@
   var onMainPinDrag = function (evt) {
     evt.preventDefault();
 
-    var startCoords = {
+    var startCoordinates = {
       x: evt.clientX,
       y: evt.clientY
     };
@@ -83,27 +77,27 @@
       adForm.classList.remove('ad-form--disabled');
 
       var shift = {
-        x: startCoords.x - moveEvt.clientX,
-        y: startCoords.y - moveEvt.clientY
+        x: startCoordinates.x - moveEvt.clientX,
+        y: startCoordinates.y - moveEvt.clientY
       };
 
-      startCoords = {
+      startCoordinates = {
         x: moveEvt.clientX,
         y: moveEvt.clientY
       };
 
-      var finishCoordsX = (mapPinMain.offsetLeft - shift.x);
-      var finishCoordsY = (mapPinMain.offsetTop - shift.y);
+      var finishCoordinatesX = (mapPinMain.offsetLeft - shift.x);
+      var finishCoordinatessY = (mapPinMain.offsetTop - shift.y);
 
-      var isAvialibleX = finishCoordsX + (PIN_MAIN_WIDTH / 2) > LOCATION_X_MIN && finishCoordsX + (PIN_MAIN_WIDTH / 2) < LOCATION_X_MAX;
-      var isAvialibleY = finishCoordsY + PIN_MAIN_HEIGHT + PIN_ARROW_HEIGHT > LOCATION_Y_MIN && finishCoordsY + PIN_MAIN_HEIGHT + PIN_ARROW_HEIGHT < LOCATION_Y_MAX;
+      var isAvialibleX = finishCoordinatesX + (PIN_MAIN_WIDTH / 2) > LOCATION_X_MIN && finishCoordinatesX + (PIN_MAIN_WIDTH / 2) < LOCATION_X_MAX;
+      var isAvialibleY = finishCoordinatessY + PIN_MAIN_HEIGHT + PIN_ARROW_HEIGHT > LOCATION_Y_MIN && finishCoordinatessY + PIN_MAIN_HEIGHT + PIN_ARROW_HEIGHT < LOCATION_Y_MAX;
 
       if (isAvialibleX) {
-        mapPinMain.style.left = finishCoordsX + 'px';
+        mapPinMain.style.left = finishCoordinatesX + 'px';
       }
 
       if (isAvialibleY) {
-        mapPinMain.style.top = finishCoordsY + 'px';
+        mapPinMain.style.top = finishCoordinatessY + 'px';
       }
       window.form.setAddressFieldValue('dragged');
     };
@@ -152,10 +146,14 @@
       document.addEventListener('keydown', onCardEscPress);
     },
     closeCard: function () {
-      map.querySelector('.map__card').remove();
+      var mapCard = map.querySelector('.map__card');
+      if (mapCard) {
+        mapCard.removeEventListener('click', window.map.closeCard);
+        mapCard.remove();
+        document.removeEventListener('keydown', onCardEscPress);
+      }
       var currentPin = map.querySelector('.map__pin--active');
       currentPin.classList.remove('map__pin--active');
-      document.removeEventListener('keydown', onCardEscPress);
     }
   };
 })();
