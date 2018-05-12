@@ -3,7 +3,7 @@
 (function () {
   var SHOW_ERROR_TIMEOUT = 3500;
 
-  var errorHandler = function (onError) {
+  var createErrorMessage = function (onError) {
     var errorBlock = document.createElement('div');
     errorBlock.style = 'z-index: 100; margin: 0 auto; text-align: center; background-color: red;';
     errorBlock.style.position = 'fixed';
@@ -21,6 +21,6 @@
   };
 
   window.error = {
-    errorHandler: errorHandler
+    createErrorMessage: createErrorMessage
   };
 })();

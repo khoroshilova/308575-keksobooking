@@ -20,7 +20,6 @@
   var adFormRooms = adForm.querySelector('#room_number');
   var adFormCapacity = adForm.querySelector('#capacity');
   var onButtonReset = adForm.querySelector('.ad-form__reset');
-  var onButtonSubmit = adForm.querySelector('.ad-form__submit');
   var AdTypePrices = {
     palace: 10000,
     flat: 1000,
@@ -30,36 +29,27 @@
 
   var onRoomNumberFieldChange = function () {
     var roomSelectedValue = adFormRooms.options[adFormRooms.selectedIndex].value;
-    var capacityAllowedValues = VALID_CAPACITY[roomSelectedValue];
 
-    var capacityAllowedOptions = [];
-
-    for (var i = 0; i < capacityAllowedValues.length; i++) {
-      var index = capacityAllowedValues[i];
-      for (var j = 0; j < adFormCapacity.options.length; j++) {
-        if (adFormCapacity.options[j].value === index) {
-          capacityAllowedOptions.push(adFormCapacity.options[j]);
-        } else {
-          adFormCapacity.options[j].disabled = true;
-        }
-      }
-    }
-
-    for (i = 0; i < capacityAllowedOptions.length; i++) {
-      capacityAllowedOptions[i].disabled = false;
-    }
+    var capacityAllowedOptions =
+    Array.from(adFormCapacity.options).filter(function (item) {
+      item.disabled = true;
+      return VALID_CAPACITY[roomSelectedValue].indexOf(item.value) !== -1;
+    });
+    capacityAllowedOptions.forEach(function (item) {
+      item.disabled = false;
+    });
   };
 
   // Функция установки значения в поле адреса
   var setAddressFieldValue = function (pinState) {
-    adFormAddres.value = window.pin.calculateMainPinCoords(pinState);
+    adFormAddres.value = window.pin.calculateMainPinCoordinates(pinState);
   };
 
   // Функция включения / отключения полей формы
   var changeAdFormFieldsState = function (value) {
-    for (var i = 0; i < adFormFieldsets.length; i++) {
-      adFormFieldsets[i].disabled = value;
-    }
+    adFormFieldsets.forEach(function (item) {
+      item.disabled = value;
+    });
   };
 
   // Поля Время заезда и выезда
@@ -87,30 +77,25 @@
     onRoomNumberFieldChange();
   });
 
-  // Клик на кнопку Отправить
-  onButtonSubmit.addEventListener('click', function () {
-    var capacitySelectedOption = adFormCapacity.options[adFormCapacity.selectedIndex];
-    if (capacitySelectedOption.disabled) {
-      adFormCapacity.setCustomValidity(VALID_CAPACITY_TEXT);
-    } else {
-      adFormCapacity.setCustomValidity('');
-    }
-  });
-
   // Успешная отправка
   var onSuccess = function () {
     window.map.disableFormFields();
+    adForm.reset();
+    onRoomNumberFieldChange();
     var successMessage = document.querySelector('.success');
     successMessage.classList.remove('hidden');
-    var hideSuccessMsg = function () {
+    var hideSuccessMessage = function () {
       successMessage.classList.add('hidden');
     };
-    setTimeout(hideSuccessMsg, 2000);
+    setTimeout(hideSuccessMessage, 2000);
   };
 
-  // Отправка формы
   adForm.addEventListener('submit', function (evt) {
-    window.backend.save(new FormData(adForm), onSuccess, window.error.errorHandler);
+    if (onRoomNumberFieldChange.disabled) {
+      adFormCapacity.setCustomValidity(VALID_CAPACITY_TEXT);
+      return;
+    }
+    window.backend.save(new FormData(adForm), onSuccess, window.error.createErrorMessage);
     evt.preventDefault();
   });
 
@@ -120,6 +105,6 @@
     onTypeFieldChange: onTypeFieldChange,
     onTimeInFieldChange: onTimeInFieldChange,
     onTimeOutFieldChange: onTimeOutFieldChange,
-    onRoomNumberFieldChange: onRoomNumberFieldChange,
+    onRoomNumberFieldChange: onRoomNumberFieldChange
   };
 })();
