@@ -21,6 +21,6 @@
   };
 
   window.error = {
-    createErrorMessage: createErrorMessage
+    show: createErrorMessage
   };
 })();

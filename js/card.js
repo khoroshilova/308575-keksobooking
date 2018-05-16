@@ -4,9 +4,11 @@
   var IMG_WIDTH = 45;
   var IMG_HEIGHT = 40;
   var IMG_ALT = 'Фотография жилья';
+  var ESC_KEYCODE = 27;
 
   var template = document.querySelector('template');
   var cardTemplate = template.content.querySelector('.map__card');
+  var map = document.querySelector('.map');
 
   // Создать изображения особенностей в объявлении
   var createFeatureItem = function (item) {
@@ -46,47 +48,86 @@
   // Создать элемент объявления
   var createCardItem = function (ad) {
     var cardItem = cardTemplate.cloneNode(true);
-    var cardItemFeatures = cardItem.querySelector('.popup__features');
-    var cardItemPhotos = cardItem.querySelector('.popup__photos');
-    var cardItemTypes = cardItem.querySelector('.popup__type');
-    var cardItemClose = cardItem.querySelector('.popup__close');
+    var cardItemFeaturesItem = cardItem.querySelector('.popup__features');
+    var cardItemPhotosItem = cardItem.querySelector('.popup__photos');
+    var cardItemTypesItem = cardItem.querySelector('.popup__type');
+    var closeCardItem = cardItem.querySelector('.popup__close');
 
-    cardItemClose.addEventListener('click', window.map.closeCard);
+    closeCardItem.addEventListener('click', onCloseCardItemClick);
 
     cardItem.querySelector('.popup__title').textContent = ad.offer.title;
     cardItem.querySelector('.popup__text--address').textContent = ad.offer.address;
     cardItem.querySelector('.popup__text--price').textContent = ad.offer.price + '₽/ночь';
     switch (ad.offer.type) {
       case 'flat':
-        cardItemTypes.textContent = 'Квартира';
+        cardItemTypesItem.textContent = 'Квартира';
         break;
       case 'bungalo':
-        cardItemTypes.textContent = 'Бунгало';
+        cardItemTypesItem.textContent = 'Бунгало';
         break;
       case 'house':
-        cardItemTypes.textContent = 'Дом';
+        cardItemTypesItem.textContent = 'Дом';
         break;
       case 'palace':
-        cardItemTypes.textContent = 'Дворец';
+        cardItemTypesItem.textContent = 'Дворец';
         break;
     }
     cardItem.querySelector('.popup__text--capacity').textContent = ad.offer.rooms + ' комнаты для ' + ad.offer.guests + ' гостей';
     cardItem.querySelector('.popup__text--time').textContent = 'Заезд после ' + ad.offer.checkin + ', выезд до ' + ad.offer.checkout;
 
-    removeChildren(cardItemFeatures);
-    cardItemFeatures.appendChild(createCollectionFromArray(ad.offer.features, createFeatureItem));
+    removeChildren(cardItemFeaturesItem);
+    cardItemFeaturesItem.appendChild(createCollectionFromArray(ad.offer.features, createFeatureItem));
 
     cardItem.querySelector('.popup__description').textContent = ad.offer.description;
 
-    removeChildren(cardItemPhotos);
-    cardItemPhotos.appendChild(createCollectionFromArray(ad.offer.photos, createPhotoItem));
+    removeChildren(cardItemPhotosItem);
+    cardItemPhotosItem.appendChild(createCollectionFromArray(ad.offer.photos, createPhotoItem));
 
     cardItem.querySelector('.popup__avatar').src = ad.author.avatar;
 
     return cardItem;
   };
 
+  // Закрыть карточку при нажатии на кнопку ESC
+  var onDocumentKeyDown = function (evt) {
+    if (evt.keyCode === ESC_KEYCODE) {
+      onCloseCardItemClick();
+    }
+  };
+
+  // Орисовать объявления
+  var renderCard = function (ad) {
+    var fragment = document.createDocumentFragment();
+    fragment.appendChild(createCardItem(ad));
+    return fragment;
+  };
+
+  var openCardItem = function (ad) {
+    map.insertBefore(renderCard(ad), map.querySelector('.map__filters-container'));
+    document.addEventListener('keydown', onDocumentKeyDown);
+  };
+
+  var onCloseCardItemClick = function () {
+    var mapCard = map.querySelector('.map__card');
+    if (mapCard) {
+      var closeCardItem = mapCard.querySelector('.popup__close');
+      if (closeCardItem) {
+        closeCardItem.removeEventListener('click', onCloseCardItemClick);
+        document.removeEventListener('keydown', onDocumentKeyDown);
+      }
+      mapCard.remove();
+    }
+    var currentPin = map.querySelector('.map__pin--active');
+    if (currentPin) {
+      currentPin.classList.remove('map__pin--active');
+    }
+  };
+
+
   window.card = {
-    createCardItem: createCardItem
+    create: createCardItem,
+    open: openCardItem,
+    close: onCloseCardItemClick,
+    onKeyDown: onDocumentKeyDown
   };
 })();
