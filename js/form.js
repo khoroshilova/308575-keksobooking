@@ -5,9 +5,11 @@
     '1': ['1'],
     '2': ['1', '2'],
     '3': ['1', '2', '3'],
-    '100': ['0'],
+    '100': ['0']
   };
   var VALID_CAPACITY_TEXT = 'Выберите допустимое количество гостей';
+  var TIMEOUT = 2000;
+  var ENABLE_FORM_FIELDS = false;
   var DISABLE_FORM_FIELDS = true;
 
   var adForm = document.querySelector('.ad-form');
@@ -17,9 +19,10 @@
   var adFormPrice = adForm.querySelector('#price');
   var adFormCheckIn = adForm.querySelector('#timein');
   var adFormCheckOut = adForm.querySelector('#timeout');
-  var adFormRooms = adForm.querySelector('#room_number');
+  var adFormRoomsNumber = adForm.querySelector('#room_number');
   var adFormCapacity = adForm.querySelector('#capacity');
-  var onButtonReset = adForm.querySelector('.ad-form__reset');
+  var buttonReset = adForm.querySelector('.ad-form__reset');
+
   var AdTypePrices = {
     palace: 10000,
     flat: 1000,
@@ -28,21 +31,17 @@
   };
 
   var onRoomNumberFieldChange = function () {
-    var roomSelectedValue = adFormRooms.options[adFormRooms.selectedIndex].value;
-
-    var capacityAllowedOptions =
-    Array.from(adFormCapacity.options).filter(function (item) {
-      item.disabled = true;
-      return VALID_CAPACITY[roomSelectedValue].indexOf(item.value) !== -1;
-    });
-    capacityAllowedOptions.forEach(function (item) {
-      item.disabled = false;
-    });
+    if (adFormCapacity.options.length > 0) {
+      [].forEach.call(adFormCapacity.options, function (item) {
+        item.selected = VALID_CAPACITY[adFormRoomsNumber.value][0] === item.value;
+        item.disabled = VALID_CAPACITY[adFormRoomsNumber.value].indexOf(item.value) === -1;
+      });
+    }
   };
 
   // Функция установки значения в поле адреса
   var setAddressFieldValue = function (pinState) {
-    adFormAddres.value = window.pin.calculateMainPinCoordinates(pinState);
+    adFormAddres.value = window.pin.calculateCoordinates(pinState);
   };
 
   // Функция включения / отключения полей формы
@@ -68,18 +67,15 @@
     adFormPrice.min = AdTypePrices[typeSelectedValue];
   };
 
-  setAddressFieldValue();
-  changeAdFormFieldsState(DISABLE_FORM_FIELDS);
-
-  // Клик на кнопку очистить
-  onButtonReset.addEventListener('click', function () {
-    window.map.disableFormFields();
+  var onButtonResetClick = function () {
+    window.map.reset();
     onRoomNumberFieldChange();
-  });
+    onTypeFieldChange();
+  };
 
   // Успешная отправка
   var onSuccess = function () {
-    window.map.disableFormFields();
+    window.map.reset();
     adForm.reset();
     onRoomNumberFieldChange();
     var successMessage = document.querySelector('.success');
@@ -87,24 +83,49 @@
     var hideSuccessMessage = function () {
       successMessage.classList.add('hidden');
     };
-    setTimeout(hideSuccessMessage, 2000);
+    setTimeout(hideSuccessMessage, TIMEOUT);
   };
 
-  adForm.addEventListener('submit', function (evt) {
+  var onAdFormSubmit = function (evt) {
     if (onRoomNumberFieldChange.disabled) {
       adFormCapacity.setCustomValidity(VALID_CAPACITY_TEXT);
       return;
     }
-    window.backend.save(new FormData(adForm), onSuccess, window.error.createErrorMessage);
+    window.backend.save(new FormData(adForm), onSuccess, window.error.show);
     evt.preventDefault();
-  });
+  };
+
+  var init = function () {
+    adFormType.addEventListener('change', onTypeFieldChange);
+    adFormCheckIn.addEventListener('change', onTimeInFieldChange);
+    adFormCheckOut.addEventListener('change', onTimeOutFieldChange);
+    adFormRoomsNumber.addEventListener('change', onRoomNumberFieldChange);
+    changeAdFormFieldsState(ENABLE_FORM_FIELDS);
+
+    // Клик на кнопку очистить
+    buttonReset.addEventListener('click', onButtonResetClick);
+    adForm.addEventListener('submit', onAdFormSubmit);
+
+    setAddressFieldValue('dragged');
+    adForm.classList.remove('ad-form--disabled');
+  };
+
+  var reset = function () {
+    adFormType.removeEventListener('change', onTypeFieldChange);
+    adFormCheckIn.removeEventListener('change', onTimeInFieldChange);
+    adFormCheckOut.removeEventListener('change', onTimeOutFieldChange);
+    adFormRoomsNumber.removeEventListener('change', onRoomNumberFieldChange);
+    adForm.removeEventListener('submit', onAdFormSubmit);
+    buttonReset.removeEventListener('click', onButtonResetClick);
+    changeAdFormFieldsState(DISABLE_FORM_FIELDS);
+    setAddressFieldValue();
+    adForm.classList.add('ad-form--disabled');
+  };
 
   window.form = {
     setAddressFieldValue: setAddressFieldValue,
     changeAdFormFieldsState: changeAdFormFieldsState,
-    onTypeFieldChange: onTypeFieldChange,
-    onTimeInFieldChange: onTimeInFieldChange,
-    onTimeOutFieldChange: onTimeOutFieldChange,
-    onRoomNumberFieldChange: onRoomNumberFieldChange
+    reset: reset,
+    init: init
   };
 })();
